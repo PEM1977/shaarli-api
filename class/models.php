@@ -57,7 +57,7 @@ class Feed extends ModelBase {
 	 * Check if feed already exist
 	 * @return bool
 	 */
-	public function exists( $config = array() ) {
+	public function exists() {
 
 		$url = $this->url = trim($this->url);
 
@@ -79,8 +79,10 @@ class Feed extends ModelBase {
 				throw new Exception("Bad scheme", 1);
 			}
 
+            $parts['path'] = !empty($parts['path']) ? $parts['path'] : '';
+            $parts['path'] = substr($parts['path'], -1) == '/' ? substr($parts['path'], 0, strlen($parts['path'] - 1)) : $parts['path'];
 			$count = self::factory()
-				->where_raw('url = ? OR url = ? OR url LIKE ?', array($http, $https, '%' . $parts['host'].(!empty($parts['path'])?$parts['path']:'') . '%')) // Retrict one shaarli per domain to avoid malformed urls => TODO: format url correctly
+				->where_raw('url = ? OR url = ? OR url LIKE ?', array($http, $https, '%' . $parts['host']. $parts['path'] . '%')) // Retrict one shaarli per domain to avoid malformed urls => TODO: format url correctly
 				->count();
 
 			return $count > 0;

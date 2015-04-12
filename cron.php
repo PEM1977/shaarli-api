@@ -62,10 +62,11 @@ class CronController {
 
 	/**
 	 * Run
+     * @param bool sync - synchronize new feeds
 	 */
-	public function run() {
+	public function run($sync = false) {
 
-		if( $this->countFeeds() == 0 ) { // Initialize feeds list
+		if( $this->countFeeds() == 0 || $sync ) { // Initialize feeds list
 			$this->syncFeeds();
 		}
 
@@ -389,26 +390,31 @@ if( is_php_cli() ) {
 	if( !defined('FAVICON_DEFAULT') ) { define('FAVICON_DEFAULT', 'default.ico'); }
 	if( !defined('FAVICON_CACHE_DURATION') ) { define('FAVICON_CACHE_DURATION', 3600*24*30); }
 
-	if( isset($argv[1]) ) {
+	if( isset($argv[1]) && $argv[1] == '--daemon'  ) { // daemon mode
+        // try to sync new feeds every n refresh
+        $sync_frequency = 200;
+        $i = 0;
+		while(true) {
+            $controller = new CronController();
+            $controller->verbose = false;
+            $success = $controller->fetchAll();
+            unset($controller);
 
-		if( $argv[1] == '--daemon'  ) { // daemon mode
+            if( !$success ) sleep(30);
 
-			while(true) {
-
-				$controller = new CronController();
-				$controller->verbose = false;
-				$success = $controller->fetchAll();
-				unset($controller);
-
-				if( !$success ) sleep(30);
-			}
-		}
+            if($i % 200 == 0) {
+                $controller = new CronController();
+                $controller->verbose = false;
+                $controller->syncFeeds();
+            }
+            $i++;
+        }
 	}
 	else { // standard mode
-
+        $sync = isset($argv[1]) && $argv[1] == '--sync' ? true : false;
 		$controller = new CronController();
 		$controller->check();
-		$controller->run();
+		$controller->run($sync);
 	}
 }
 else {

@@ -59,3 +59,18 @@ php cron.php
 * Obtenir le top des liens partagés depuis 48h: http://nexen.mkdir.fr/shaarli-api/top?interval=48h&pretty=1
 * Faire une recherche sur php: http://nexen.mkdir.fr/shaarli-api/search?q=php&pretty=1
 * Rechercher une discution sur un lien: http://nexen.mkdir.fr/shaarli-api/discussion?url=https://nexen.mkdir.fr/shaarli-river/index.php&pretty=1
+
+## Cron usage
+
+Simple feeds refresh (feeds will be sync if the database is fresh new):
+
+    php cron.php
+    
+Feeds refresh and seek for new feeds:
+
+    php cron.php --sync
+    
+Can also be used as a daemon. No output (todo log?). New feeds will be fetch regularly:
+
+    php cron.php --daemon
+    

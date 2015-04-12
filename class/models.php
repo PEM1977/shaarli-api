@@ -46,10 +46,10 @@ class Feed extends ModelBase {
 	public function fetched() {
 		if(DB_TYPE=="sqlite"){
 			$this->set_expr('fetched_at', "datetime('NOW')");
-		}elseif(DB_TYPE=="mysql"){
+		}elseif(DB_TYPE=='mysql' || DB_TYPE=='pgsql'){
 			$this->set_expr('fetched_at', 'NOW()');
 		}else{
-			die("Error in config.php. DB_TYPE is not sqlite or mysql");
+			die("Error in config.php. DB_TYPE is not sqlite, mysql or pgsql.");
 		}
 	}
 

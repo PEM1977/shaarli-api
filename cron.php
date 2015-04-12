@@ -32,14 +32,14 @@ class CronController {
 							ORM::for_table('')->raw_execute( $query );
 						}
 					}
-				}elseif(DB_TYPE=="mysql"){
-					$scheme = __DIR__ . '/database/mysql_schema.sql';
+				}elseif(DB_TYPE=="mysql" || DB_TYPE=='pgsql'){
+					$scheme = __DIR__ . '/database/'. DB_TYPE .'_schema.sql';
 					if( file_exists($scheme) ) {
 						$scheme = file_get_contents( $scheme );
 						ORM::for_table('')->raw_execute( $scheme );
 					}
 				}else{
-					die("Error in config.php. DB_TYPE is not sqlite or mysql");
+					die("Error in config.php. DB_TYPE is not sqlite, mysql or pgsql");
 				}
 				
 			}
@@ -77,25 +77,25 @@ class CronController {
 	 * Fetch all feeds
 	 */
 	public function fetchAll() {
-		if(DB_TYPE=="sqlite"){
-			$feeds = Feed::factory()
-					->where_raw("(fetched_at IS NULL OR fetched_at < strftime('%Y-%m-%d %H:%M:%S', 'now','-1 minute'))")
-					->where('enabled', 1)
-					->findMany();
-		}elseif(DB_TYPE=="mysql"){
-			$feeds = Feed::factory()
-					->where_raw('(fetched_at IS NULL OR fetched_at < ADDDATE(NOW(), INTERVAL (fetch_interval * -1) MINUTE))')
-					->where('enabled', 1)
-					->findMany();
-		}else{
-			die("Error in config.php. DB_TYPE is not sqlite or mysql");
-		}		
+        $feeds = Feed::factory();
+		if(DB_TYPE=='sqlite'){
+			$feeds->where_raw("(fetched_at IS NULL OR fetched_at < strftime('%Y-%m-%d %H:%M:%S', 'now','-1 minute'))");
+		}elseif(DB_TYPE=='mysql'){
+            $feeds->where_raw('(fetched_at IS NULL OR fetched_at < ADDDATE(NOW(), INTERVAL (fetch_interval * -1) MINUTE))');
+		}elseif(DB_TYPE=='pgsql'){
+            $feeds->where_raw("(fetched_at IS NULL OR fetched_at < NOW() - interval '1 minute' * fetch_interval)");
+        }
+        else{
+			die("Error in config.php. DB_TYPE is not sqlite, mysql or pgsql.");
+		}
+        $feeds = $feeds->where('enabled', 1)
+                    ->findMany();
 
-		if( $feeds != null ) {
+        if( $feeds != null ) {
 
-			foreach( $feeds as &$feed ) {
+            foreach( $feeds as &$feed ) {
 
-				$this->fetch( $feed );
+                $this->fetch( $feed );
 			}
 
 			return true;

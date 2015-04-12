@@ -124,11 +124,14 @@ class ShaarliApi {
 
 			if( in_array($arguments['interval'], $intervals) ) {
 
-				$entries = Entry::factory()
-						->select_expr('permalink, entries.title, COUNT(1) AS count')
-						->order_by_desc('count')
-						->group_by('permalink')
-						->having_gt('count', 1);
+                $entries = Entry::factory();
+                if(DB_TYPE!="pgsql") {
+                    $entries = $entries
+                        ->select_expr('permalink, entries.title, COUNT(1) AS count')
+                        ->order_by_desc('count')
+                        ->group_by('permalink, entries.title')
+                        ->having_gt('count', 1);
+                }
 
 				if(DB_TYPE=="sqlite"){
 					switch ($arguments['interval']) {
@@ -148,7 +151,7 @@ class ShaarliApi {
 							$entries->where_raw("date > date('now', '-3 month')");
 							break;
 					}
-				}elseif(DB_TYPE=="mysql"){
+				}elseif(DB_TYPE=='mysql'){
 					switch ($arguments['interval']) {
 						case '12h':					
 							$entries->where_raw('date > ADDDATE(NOW(), INTERVAL -12 HOUR)');
@@ -163,16 +166,36 @@ class ShaarliApi {
 							$entries->where_raw('date > ADDDATE(NOW(), INTERVAL -1 MONTH)');
 							break;
 						case '3month':					
-							$entries->where_raw('date > ADDDATE(NOW(), INTERVAL -1 MONTH)');
+							$entries->where_raw('date > ADDDATE(NOW(), INTERVAL -3 MONTH)');
 							break;
 					}
-				}else{
-					die("Error in config.php. DB_TYPE is not sqlite or mysql");
+				}
+                elseif(DB_TYPE=='pgsql') {
+                    $pgsql_query = "SELECT DISTINCT ON (permalink) a.permalink, (select b.title from entries b where b.permalink = a.permalink order by b.id asc limit 1), COUNT(1) FROM entries a WHERE (a.date > NOW() - interval '%s') group by a.permalink HAVING COUNT(1) > 1";
+                    switch ($arguments['interval']) {
+                        case '12h':
+                            $entries->raw_query(sprintf($pgsql_query, '12 HOURS'));
+                            break;
+                        case '24h':
+                            $entries->raw_query(sprintf($pgsql_query, '24 HOURS'));
+                            break;
+                        case '48h':
+                            $entries->raw_query(sprintf($pgsql_query, '48 HOURS'));
+                            break;
+                        case '1month':
+                            $entries->raw_query(sprintf($pgsql_query, '1 MONTH'));
+                            break;
+                        case '3month':
+                            $entries->raw_query(sprintf($pgsql_query, '3 MONTHS'));
+                            break;
+                    }
+                }
+                else
+                {
+					die("Error in config.php. DB_TYPE is not sqlite, mysql or pgsql");
 				}
 
-				
-
-				return $entries->findArray();				
+				return $entries->findArray();
 			}
 			else {
 

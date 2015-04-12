@@ -30,6 +30,23 @@ if(DB_TYPE=="sqlite"){
 	ORM::configure('mysql:host='. DB_HOST .';dbname='. DB_NAME);
 	ORM::configure('username', DB_USER);
 	ORM::configure('password', DB_PASS);
-}else{
+}
+elseif(DB_TYPE=="pgsql") {
+    // mysql
+    ORM::configure('pgsql:host='. DB_HOST .';dbname='. DB_NAME);
+    ORM::configure('username', DB_USER);
+    ORM::configure('password', DB_PASS);
+} else
+{
 	die("Error in config.php. DB_TYPE is not sqlite or mysql");
+}
+
+if(defined('DEBUG') && DEBUG === true) {
+    ORM::configure('logging', true);
+    ORM::configure(
+        'logger',
+        function ($log_string, $query_time) {
+            file_put_contents('/tmp/river_idorm.log', date('%c') . $log_string . ' in ' . $query_time . PHP_EOL, FILE_APPEND);
+        }
+    );
 }

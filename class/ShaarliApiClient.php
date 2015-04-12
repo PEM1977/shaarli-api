@@ -99,4 +99,11 @@ class ShaarliApiClient {
 
 		return $this->callApi('discussion', $arguments);
 	}
+
+    /**
+     * countlinks
+     */
+    public function countlinks() {
+        return $this->callApi('countlinks');
+    }
 }

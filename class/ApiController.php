@@ -19,6 +19,7 @@ class ApiController extends AbstractApiController {
 			'keywords',
 			'syncfeeds',
 			'getfavicon',
+            'countlinks',
 			'ping',
 		);
 

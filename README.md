@@ -47,6 +47,7 @@ php cron.php
 * /search Rechercher dans les billets
 * /discussion Rechercher une discussion
 * /syncfeeds Synchroniser la liste des shaarlis
+* /countlinks Retourne le nombre de shaares enregistrés
 
 ## Options
 * &format=json

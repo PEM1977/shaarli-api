@@ -572,6 +572,14 @@ class ShaarliApi {
 		}
 	}
 
+    /**
+     * Count links
+     * @route /countlinks
+     */
+    public function countlinks() {
+        return array('total' => Entry::factory()->count());
+    }
+
 	/**
 	 * Ping service
 	 * @route /ping

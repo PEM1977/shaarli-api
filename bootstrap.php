@@ -18,6 +18,10 @@ require __DIR__.'/vendor/autoload.php';
  * doc: http://paris.readthedocs.org/en/latest/configuration.html#setup
  */
 
+if(!defined('DB_TYPE')) {
+    define('DB_TYPE', 'mysql');
+}
+
 if(DB_TYPE=="sqlite"){
 	// sqlite
 	ORM::configure('sqlite:./database/database.db');

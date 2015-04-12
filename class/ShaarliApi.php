@@ -257,6 +257,10 @@ class ShaarliApi {
 				$term = preg_replace('/^feed\:/', '', $term);
 				$adv_search = 'feed';
 			}
+            elseif( preg_match('/^tag\:/i', $term) ) {
+                $term = preg_replace('/^tag\:/', '', $term);
+                $adv_search = 'tag';
+            }
 
 			$term = '%' . $term . '%';
 
@@ -267,13 +271,14 @@ class ShaarliApi {
 					->order_by_desc('date');
 
 			if( $adv_search == 'title' ) { // Search in title only
-
 				$entries->where_like('entries.title', $term);
 			}
-			else if ( $adv_search == 'feed' ) {
-			    
+			elseif ( $adv_search == 'feed' ) {
 			    $entries->where_like('feeds.title', $term);
 			}
+            elseif( $adv_search == 'tag' ) {
+                $entries->where_like('entries.categories', $term);
+            }
 			else {
 
 				$entries->where_raw('(entries.title LIKE ? OR entries.content LIKE ? OR feeds.title LIKE ?)', array($term, $term, $term)); // security: possible injection?
@@ -292,10 +297,13 @@ class ShaarliApi {
 			}
 
 			$entries = $entries->findArray();
+            if( $entries != null ) {
 
-			if( $entries != null ) {
-
-				foreach( $entries as &$entry ) {
+                foreach( $entries as $key => &$entry ) {
+                    if( $adv_search == 'tag' && !in_array(substr($term,1,strlen($term)-2), explode(',', $entry['categories']))) {
+                        unset($entries[$key]);
+                        continue;
+                    }
 
 					$entry['feed']['id'] = $entry['feed_id'];
 					$entry['feed']['url'] = $entry['feed_url'];

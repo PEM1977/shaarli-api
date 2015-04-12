@@ -406,6 +406,7 @@ if( is_php_cli() ) {
                 $controller = new CronController();
                 $controller->verbose = false;
                 $controller->syncFeeds();
+                unset($controller);
             }
             $i++;
         }

@@ -129,7 +129,7 @@ class ShaarliApi {
                     $entries = $entries
                         ->select_expr('permalink, entries.title, COUNT(1) AS count')
                         ->order_by_desc('count')
-                        ->group_by('permalink, entries.title')
+                        ->group_by('permalink')
                         ->having_gt('count', 1);
                 }
 

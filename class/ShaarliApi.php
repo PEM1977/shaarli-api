@@ -171,7 +171,9 @@ class ShaarliApi {
 					}
 				}
                 elseif(DB_TYPE=='pgsql') {
-                    $pgsql_query = "SELECT DISTINCT ON (permalink) a.permalink, (select b.title from entries b where b.permalink = a.permalink order by b.id asc limit 1), COUNT(1) FROM entries a WHERE (a.date > NOW() - interval '%s') group by a.permalink HAVING COUNT(1) > 1";
+                    $pgsql_query = "SELECT a.permalink, ".
+                        "(select b.title from entries b where b.permalink = a.permalink order by b.id asc limit 1), COUNT(1) ".
+                        "FROM entries a WHERE (a.date > NOW() - interval '%s') group by a.permalink HAVING COUNT(1) > 1 order by COUNT(1) desc";
                     switch ($arguments['interval']) {
                         case '12h':
                             $entries->raw_query(sprintf($pgsql_query, '12 HOURS'));
@@ -209,12 +211,20 @@ class ShaarliApi {
 
 			$results = array();
 
-			$entries = Entry::factory()
-				->select_expr('permalink, entries.title, COUNT(1) AS count')
-				->where_raw('DATE(entries.date)=?', array($date))
-				->order_by_desc('count')
-				->group_by('permalink')
-				->having_gt('count', 1);
+			$entries = Entry::factory();
+            if(DB_TYPE != 'pgsql') {
+                $entries->select_expr('permalink, entries.title, COUNT(1) AS count')
+                    ->where_raw('DATE(entries.date)=?', array($date))
+                    ->order_by_desc('count')
+                    ->group_by('permalink')
+                    ->having_gt('count', 1);
+            }
+            else {
+                $pgsql_query = "SELECT a.permalink, ".
+                    "(select b.title from entries b where b.permalink = a.permalink order by b.id asc limit 1), COUNT(1) ".
+                    "FROM entries a WHERE DATE(a.date) = '%s' group by a.permalink HAVING COUNT(1) > 1 order by COUNT(1) desc";
+                $entries->raw_query(sprintf($pgsql_query, $date));
+            }
 
 			$entries = $entries->findArray();
 

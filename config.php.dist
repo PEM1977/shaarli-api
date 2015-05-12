@@ -40,6 +40,13 @@ define('FAVICON_DEFAULT', 'default.ico');
 // Reload favicon each month
 define('FAVICON_CACHE_DURATION', 3600*24*30);
 
+// number of entries to display
+define('ENTRIES_DISPLAYED', 100);
+
+// Table Names
+define('RIVER_FEEDS_TABLE', 'RiverFeeds');
+define('RIVER_ENTRIES_TABLE', 'RiverEntries');
+
 define('DEBUG', false);
 
 // Ne toucher à rien après cette ligne si vous ne savez pas se que vous faite =)

@@ -80,3 +80,6 @@ Can also be used as a daemon. No output (todo log?). New feeds will be fetch reg
   * Changed SQL Tables name to RiverEntries and RiverFeeds, since other application (like Wallabag) uses the same names.
   * Table names can be defined in config.php : RIVER_FEEDS_TABLE & RIVER_ENTRIES_TABLE
   * Added a parameter to set the number of displayed entries : ENTRIES_DISPLAYED
+  * You may need to edit .htaccess to modify the folder name of your api 
+    - RewriteBase /[your api folder name]/
+    - RewriteRule ^(.*)$ /[your api folder name]/index.php/$1 [L]

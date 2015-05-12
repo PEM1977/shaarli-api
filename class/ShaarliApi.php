@@ -13,7 +13,7 @@ class ShaarliApi {
 		// Full feed list
 		if( isset($arguments['full']) && $arguments['full'] == 1 ) {
 
-			$feeds->select_expr('feeds.*');
+			$feeds->select_expr(RIVER_FEEDS_TABLE.'.*');
 		}
 		// Disabled feeds
 		elseif( isset($arguments['disabled']) && $arguments['disabled'] == 1 ) {
@@ -55,15 +55,15 @@ class ShaarliApi {
 	public function latest( $arguments ) {
 
 		$entries = Feed::factory()
-					 ->select_expr('feeds.id AS feed_id, feeds.url AS feed_url, feeds.link AS feed_link, feeds.title AS feed_title')
-					 ->select_expr('entries.id, date, permalink, entries.title, content, categories')
-					->join('entries', array('entries.feed_id', '=', 'feeds.id'))
-					->order_by_desc('date');
+					 ->select_expr(RIVER_FEEDS_TABLE.'.id AS feed_id, ' .RIVER_FEEDS_TABLE .'.url AS feed_url, '. RIVER_FEEDS_TABLE. '.link AS feed_link, '. RIVER_FEEDS_TABLE . '.title AS feed_title')
+					 ->select_expr(RIVER_ENTRIES_TABLE.'.id, date, permalink, ' . RIVER_ENTRIES_TABLE. '.title, content, categories')
+					 ->join(RIVER_ENTRIES_TABLE, array(RIVER_ENTRIES_TABLE.'.feed_id', '=', RIVER_FEEDS_TABLE.'.id'))
+					 ->order_by_desc('date');
 
 		// Count reshare links
 		if( isset($arguments['reshare']) && $arguments['reshare'] == 1 ) {
 
-			$entries->select_expr('(SELECT COUNT(1) FROM entries AS e2 WHERE entries.permalink=e2.permalink) AS shares');
+			$entries->select_expr('(SELECT COUNT(1) FROM' . RIVER_FEEDS_TABLE . 'AS e2 WHERE '.RIVER_ENTRIES_TABLE.'.permalink=e2.permalink) AS shares');
 		}
 
 		// Filter by feed ids
@@ -75,15 +75,15 @@ class ShaarliApi {
 				}
 			}
 
-			$entries->where_in('feeds.id', $arguments['ids'] );
+			$entries->where_in(RIVER_FEEDS_TABLE.'.id', $arguments['ids'] );
 		}
 
 		// Limit
-		if( isset($arguments['limit']) && $arguments['limit'] >= 5 && $arguments['limit'] <= 50 ) {
+		if( isset($arguments['limit']) && $arguments['limit'] >= 5 && $arguments['limit'] <= ENTRIES_DISPLAYED ) {
 			$entries->limit( (int) $arguments['limit'] );
 		}
 		else {
-			$entries->limit(50);
+			$entries->limit(ENTRIES_DISPLAYED);
 		}
 
 		$entries = $entries->findArray();
@@ -127,7 +127,7 @@ class ShaarliApi {
                 $entries = Entry::factory();
                 if(DB_TYPE!="pgsql") {
                     $entries = $entries
-                        ->select_expr('permalink, entries.title, COUNT(1) AS count')
+                        ->select_expr('permalink, '.RIVER_ENTRIES_TABLE.'.title, COUNT(1) AS count')
                         ->order_by_desc('count')
                         ->group_by('permalink')
                         ->having_gt('count', 1);
@@ -172,8 +172,8 @@ class ShaarliApi {
 				}
                 elseif(DB_TYPE=='pgsql') {
                     $pgsql_query = "SELECT a.permalink, ".
-                        "(select b.title from entries b where b.permalink = a.permalink order by b.id asc limit 1), COUNT(1) ".
-                        "FROM entries a WHERE (a.date > NOW() - interval '%s') group by a.permalink HAVING COUNT(1) > 1 order by COUNT(1) desc";
+                        "(select b.title from " . RIVER_ENTRIES_TABLE . " b where b.permalink = a.permalink order by b.id asc limit 1), COUNT(1) ".
+                        "FROM " . RIVER_ENTRIES_TABLE . " a WHERE (a.date > NOW() - interval '%s') group by a.permalink HAVING COUNT(1) > 1 order by COUNT(1) desc";
                     switch ($arguments['interval']) {
                         case '12h':
                             $entries->raw_query(sprintf($pgsql_query, '12 HOURS'));
@@ -213,16 +213,16 @@ class ShaarliApi {
 
 			$entries = Entry::factory();
             if(DB_TYPE != 'pgsql') {
-                $entries->select_expr('permalink, entries.title, COUNT(1) AS count')
-                    ->where_raw('DATE(entries.date)=?', array($date))
+                $entries->select_expr('permalink, ' . RIVER_ENTRIES_TABLE . '.title, COUNT(1) AS count')
+                    ->where_raw('DATE(' . RIVER_ENTRIES_TABLE . '.date)=?', array($date))
                     ->order_by_desc('count')
                     ->group_by('permalink')
                     ->having_gt('count', 1);
             }
             else {
                 $pgsql_query = "SELECT a.permalink, ".
-                    "(select b.title from entries b where b.permalink = a.permalink order by b.id asc limit 1), COUNT(1) ".
-                    "FROM entries a WHERE DATE(a.date) = '%s' group by a.permalink HAVING COUNT(1) > 1 order by COUNT(1) desc";
+                    "(select b.title from " . RIVER_ENTRIES_TABLE . " b where b.permalink = a.permalink order by b.id asc limit 1), COUNT(1) ".
+                    "FROM " . RIVER_ENTRIES_TABLE . " a WHERE DATE(a.date) = '%s' group by a.permalink HAVING COUNT(1) > 1 order by COUNT(1) desc";
                 $entries->raw_query(sprintf($pgsql_query, $date));
             }
 
@@ -241,10 +241,10 @@ class ShaarliApi {
 	public function bestlinks( $arguments ) {
 
 		$entries = Feed::factory()
-				->select_expr('feeds.id AS feed_id, feeds.url AS feed_url, feeds.link AS feed_link, feeds.title AS feed_title')
-				->select_expr('MIN(entries.date) AS date, permalink, entries.title, content, COUNT(1) AS count')
-				->join('entries', array('entries.feed_id', '=', 'feeds.id'))
-				->order_by_expr('MIN(entries.date) DESC')
+				->select_expr(RIVER_FEEDS_TABLE .'.id AS feed_id, ' . RIVER_FEEDS_TABLE . '..url AS feed_url, ' . RIVER_FEEDS_TABLE . '.link AS feed_link, ' . RIVER_FEEDS_TABLE . '.title AS feed_title')
+				->select_expr('MIN(' . RIVER_ENTRIES_TABLE . '.date) AS date, permalink, ' . RIVER_ENTRIES_TABLE . '.title, content, COUNT(1) AS count')
+				->join(RIVER_ENTRIES_TABLE, array(RIVER_ENTRIES_TABLE .'.feed_id', '=', RIVER_ENTRIES_TABLE .'.id'))
+				->order_by_expr('MIN(' . RIVER_ENTRIES_TABLE . '.date) DESC')
 				->group_by('permalink')
 				->having_raw('count > 1'); // TODO group order wtf
 
@@ -298,23 +298,23 @@ class ShaarliApi {
 			$term = '%' . $term . '%';
 
 			$entries = Feed::factory()
-					->select_expr('feeds.id AS feed_id, feeds.url AS feed_url, feeds.link AS feed_link, feeds.title AS feed_title')
-					->select_expr('entries.id, date, permalink, entries.title, content, categories')
-					->join('entries', array('entries.feed_id', '=', 'feeds.id'))
+					->select_expr(RIVER_FEEDS_TABLE .'.id AS feed_id, ' . RIVER_FEEDS_TABLE . '.url AS feed_url, ' . RIVER_FEEDS_TABLE . '.link AS feed_link, ' . RIVER_FEEDS_TABLE . '.title AS feed_title')
+					->select_expr(RIVER_ENTRIES_TABLE.'.id, date, permalink, ' . RIVER_ENTRIES_TABLE . '.title, content, categories')
+					->join(RIVER_ENTRIES_TABLE, array(RIVER_ENTRIES_TABLE.'.feed_id', '=', RIVER_FEEDS_TABLE . '.id'))
 					->order_by_desc('date');
 
 			if( $adv_search == 'title' ) { // Search in title only
-				$entries->where_like('entries.title', $term);
+				$entries->where_like(RIVER_ENTRIES_TABLE . '.title', $term);
 			}
 			elseif ( $adv_search == 'feed' ) {
-			    $entries->where_like('feeds.title', $term);
+			    $entries->where_like(RIVER_FEEDS_TABLE .'.title', $term);
 			}
             elseif( $adv_search == 'tag' ) {
-                $entries->where_like('entries.categories', $term);
+                $entries->where_like(RIVER_ENTRIES_TABLE . '.categories', $term);
             }
 			else {
 
-				$entries->where_raw('(entries.title LIKE ? OR entries.content LIKE ? OR feeds.title LIKE ?)', array($term, $term, $term)); // security: possible injection?
+				$entries->where_raw('(' .RIVER_ENTRIES_TABLE . '.title LIKE ? OR ' .RIVER_ENTRIES_TABLE . '.content LIKE ? OR ' . RIVER_FEEDS_TABLE . '.title LIKE ?)', array($term, $term, $term)); // security: possible injection?
 			}
 
 			// Filter by feed ids
@@ -326,7 +326,7 @@ class ShaarliApi {
 					}
 				}
 
-				$entries->where_in('feeds.id', $arguments['ids'] );
+				$entries->where_in(RIVER_FEEDS_TABLE.'.id', $arguments['ids'] );
 			}
 
 			$entries = $entries->findArray();
@@ -362,9 +362,9 @@ class ShaarliApi {
 	public function random( $arguments ) {
 
 		$entries = Feed::factory()
-					 ->select_expr('feeds.id AS feed_id, feeds.url AS feed_url, feeds.link AS feed_link, feeds.title AS feed_title')
-					 ->select_expr('entries.id, date, permalink, entries.title, content, categories')
-					->join('entries', array('entries.feed_id', '=', 'feeds.id'))
+					 ->select_expr(RIVER_FEEDS_TABLE.'.id AS feed_id, ' . RIVER_FEEDS_TABLE . '.url AS feed_url, '. RIVER_FEEDS_TABLE . '.link AS feed_link, ' . RIVER_FEEDS_TABLE . '.title AS feed_title')
+					 ->select_expr(RIVER_ENTRIES_TABLE . '.id, date, permalink, ' . RIVER_ENTRIES_TABLE . '.title, content, categories')
+					->join(RIVER_ENTRIES_TABLE, array(RIVER_ENTRIES_TABLE .'.feed_id', '=', RIVER_FEEDS_TABLE . '.id'))
 					->order_by_expr('RAND()');
 
 		// Limit
@@ -407,20 +407,20 @@ class ShaarliApi {
 			$url = trim($arguments['url']);
 
 			$entries = Feed::factory()
-					->select_expr('feeds.id AS feed_id, feeds.url AS feed_url, feeds.link AS feed_link, feeds.title AS feed_title')
-					->select_expr('entries.id, date, permalink, entries.title, content, categories')
-					->join('entries', array('entries.feed_id', '=', 'feeds.id'))
+					->select_expr(RIVER_FEEDS_TABLE . '.id AS feed_id, ' . RIVER_FEEDS_TABLE . '.url AS feed_url, ' . RIVER_FEEDS_TABLE . '.link AS feed_link, ' . RIVER_FEEDS_TABLE . '.title AS feed_title')
+					->select_expr(RIVER_ENTRIES_TABLE . '.id, date, permalink, ' .RIVER_ENTRIES_TABLE . '.title, content, categories')
+					->join(RIVER_ENTRIES_TABLE, array(RIVER_ENTRIES_TABLE .'.feed_id', '=', RIVER_FEEDS_TABLE . '.id'))
 					->order_by_desc('date');
 
 			if( $search_method == 'strict' ) {
 
-				$entries->where('entries.permalink', $url);
+				$entries->where(RIVER_ENTRIES_TABLE .'.permalink', $url);
 			}
 			else if( $search_method == 'large' ) {
 
 				// TODO: à réfléchir...
 				$url = trim($url, '/') . '%';
-				$entries->where_like('entries.permalink', $url);
+				$entries->where_like(RIVER_ENTRIES_TABLE . '.permalink', $url);
 			}
 
 			$entries = $entries->findArray();

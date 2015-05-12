@@ -12,6 +12,7 @@
  * @contributors:
  *   ArthurHoaro (https://github.com/ArthurHoaro)
  *   Oros (https://github.com/Oros42/shaarli-river)
+ *   PetitEtreMalfaisant 
  */
 
 /**
@@ -33,6 +34,9 @@ define('DB_PASS', 'shaarli-api');
 
 // SQLite
 //define('DB_TYPE', 'sqlite');
+
+// API PATH
+define('FAVICON_DIRECTORY', __DIR__ . '/favicon/');
 
 // Favicon directory
 define('FAVICON_DIRECTORY', __DIR__ . '/favicon/');

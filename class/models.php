@@ -27,7 +27,7 @@ class ModelBase extends Model {
  */
 class Feed extends ModelBase {
 
-	public static $_table = 'feeds';
+	public static $_table = RIVER_FEEDS_TABLE;
 
 	/**
 	 * Url setter
@@ -119,7 +119,7 @@ class Feed extends ModelBase {
  */
 class Entry extends ModelBase {
 
-	public static $_table = 'entries';
+	public static $_table = RIVER_ENTRIES_TABLE;
 
 	/**
 	 * Check if entry already exist

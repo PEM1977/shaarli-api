@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS `feeds` (
+CREATE TABLE IF NOT EXISTS `RiverFeeds` (
   `id` INTEGER UNIQUE PRIMARY KEY AUTOINCREMENT ,
   `url` varchar(255) NOT NULL,
   `https` tinyint(1) DEFAULT NULL,
@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS `feeds` (
 
 -- next query
 
-CREATE TABLE IF NOT EXISTS `entries` (
+CREATE TABLE IF NOT EXISTS `RiverEntries` (
   `id` INTEGER UNIQUE PRIMARY KEY AUTOINCREMENT ,
   `date` timestamp NULL DEFAULT NULL,
   `permalink` varchar(255) NOT NULL,
@@ -24,5 +24,5 @@ CREATE TABLE IF NOT EXISTS `entries` (
   `hash` varchar(255) NOT NULL,
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `feed_id` int(10)  NOT NULL,
-   FOREIGN KEY (`feed_id`) REFERENCES `feeds` (`id`) ON DELETE CASCADE
+   FOREIGN KEY (`feed_id`) REFERENCES `RiverFeeds` (`id`) ON DELETE CASCADE
   );

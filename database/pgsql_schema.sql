@@ -1,6 +1,6 @@
-DROP TABLE IF EXISTS "entries";
+DROP TABLE IF EXISTS "RiverEntries";
 
-CREATE TABLE "entries" (
+CREATE TABLE "RiverEntries" (
         "id" serial NOT NULL ,
         "date" timestamp with time zone ,
         "permalink" text NOT NULL ,
@@ -14,13 +14,13 @@ CREATE TABLE "entries" (
 
 );
 DROP INDEX IF EXISTS "entries_feed_id";
-CREATE INDEX "entries_feed_id" ON "entries" ("feed_id");
+CREATE INDEX "entries_feed_id" ON "RiverEntries" ("feed_id");
 DROP INDEX IF EXISTS "entries_date";
-CREATE INDEX "entries_date" ON "entries" ("date");
+CREATE INDEX "entries_date" ON "RiverEntries" ("date");
 
-DROP TABLE IF EXISTS "feeds";
+DROP TABLE IF EXISTS "RiverFeeds";
 
-CREATE TABLE "feeds" (
+CREATE TABLE "RiverFeeds" (
         "id" serial NOT NULL ,
         "url" text NOT NULL ,
         "https" smallint ,
@@ -35,4 +35,4 @@ CREATE TABLE "feeds" (
 
 );
 DROP INDEX IF EXISTS "feeds_feeds_url_unique";
-CREATE UNIQUE INDEX "feeds_feeds_url_unique" ON "feeds" ("url");
+CREATE UNIQUE INDEX "feeds_feeds_url_unique" ON "RiverFeeds" ("url");
